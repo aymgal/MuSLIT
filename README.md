@@ -1,2 +1,2 @@
 # MuSLIT
-Multi-wavelength Sparse Linear Inverse Tool
+Multi-wavelength Sparse Linear Inversion Tool
