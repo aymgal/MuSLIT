@@ -6,7 +6,7 @@ FOR NOW it is just a wrapper around 'proxmin' by the authors above,
 forked here :https://github.com/aymgal/proxmin
 """
 
-import proxmin
+from proxmin import nmf
 from proxmin import operators
 
 
@@ -23,7 +23,8 @@ _kwargs_proxmin_default = {
     'max_iter': 1000,
     'e_rel': 1e-3,
     'e_abs': 0,
-    'traceback': None
+    'traceback': None,
+    'custom_prox_likelihood': None,
 }
 
 
@@ -38,8 +39,8 @@ class BlockSDMM(object):
         self.kwargs_proxmin = kwargs_proxmin
 
     def optimize(self):
-        A, S, hist = proxmin.nmf(self.Y_matrix, 
-                                 self.A_matrix_init, 
-                                 self.S_matrix_init, 
-                                 **self.kwargs_proxmin)
+        A, S, hist = nmf.nmf_with_prox_f(self.Y_matrix, 
+                                         self.A_matrix_init, 
+                                         self.S_matrix_init, 
+                                         **self.kwargs_proxmin)
         return A, S, hist
