@@ -96,49 +96,6 @@ def build_lensing_operator(kappa, num_pix, source_to_image_ratio,
     return F
 
 
-# def source_to_image(source, lensing_operator, num_pix, ones=True):
-#     if ones:
-#         one_lens = source_to_image(np.ones(source.shape), lensing_operator, num_pix, ones=False)
-#         one_lens[np.where(one_lens == 0)] = 1.
-#     else:
-#         one_lens = 1.
-
-#     image = np.zeros((num_pix, num_pix))
-
-#     num_pix_src = source.shape[0]
-#     xb, yb = image_utils.square_grid(num_pix_src, dtype=int)
-
-#     k = 0
-#     for pos in lensing_operator:
-#         if np.size(np.shape(pos)) != 1:
-#             image[np.array(pos[0][:]),
-#                   np.array(pos[1][:])] += source[xb[k], yb[k]]
-#         k += 1
-#     return image / one_lens
-
-
-# def image_to_source(image, lensing_operator, num_pix_src, square=False, lensed=True):
-#     source = np.zeros((num_pix_src, num_pix_src))
-#     xb, yb = image_utils.square_grid(num_pix_src, dtype=int)
-
-#     for k in range(num_pix_src**2):
-#         pos = lensing_operator[k]
-#         if np.size(np.shape(pos)) > 1:
-
-#             light = image[np.array(pos[0][:]), np.array(pos[1][:])]
-
-#             if lensed:
-#                 light /= np.max([1, np.size(pos[0][:])])
-#                 if square:
-#                     source[xb[k], yb[k]] += np.sum(light**2)
-#                 else:
-#                     source[xb[k], yb[k]] += np.sum(light)
-#             else:
-#                 source[xb[k],yb[k]] += np.sum(light)
-#     if square:
-#         source = np.sqrt(source)
-#     return source
-
 def source_to_image(source, lensing_operator, num_pix, ones=True):
     if ones:
         one_lens = source_to_image(np.ones(source.shape), lensing_operator, num_pix, ones=False)
