@@ -4,6 +4,7 @@ import numpy as np
 import pysap
 
 from MuSLIT.transforms.base_dwt import BaseDWT
+from MuSLIT.transforms.data_structures import ComponentMatrix
 
 
 _starlet_pysap_name = 'BsplineWaveletTransformATrousAlgorithm'
@@ -23,7 +24,7 @@ class StarletTransform(BaseDWT):
         # max number of CPUs available minus 1
         self._pysap_transform = pysap.load_transform(_starlet_pysap_name)
         
-    def transform(self, img):
+    def analysis(self, img):
         """Undecimated wavelet transform with Bspline wavelet,
         i.e. 1st gen starlet transform using PySAP.
         """
@@ -35,7 +36,7 @@ class StarletTransform(BaseDWT):
         coeffs = self._T.analysis_data
         return coeffs
 
-    def inverse(self, coeffs, fast=True):
+    def synthesis(self, coeffs, fast=True):
         """Inverse 1st gen starlet transform
         """
         if fast:

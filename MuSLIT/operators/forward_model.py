@@ -12,28 +12,37 @@ class ForwardModel(object):
     """
 
     def __init__(self, blurring_matrix, mixing_matrix, lensing_martrix):
-
-        self.F = 
-
+        self.H   = blurring_matrix.H
+        self.H_t = blurring_matrix.H_t
+        self.A   = mixing_matrix.A
+        self.A_t = mixing_matrix.A_t
+        self.F   = lensing_martrix.F
+        self.F_t = lensing_martrix.F_t
 
     def _apply_HAF(self, X):
-        return self.H(self.A(self(F(component_matrix))))
+        """here X must be a ComponentMatrix object"""
+        return self.H(self.A(self(F(X))))
+
+    def _apply_FAH(self, X):
+        """here X must be a numpy array of shape (num_bands, num_pix**2)"""
+        return self.F_t(self.A_t(self(H_t(X))))
 
     def operator(self, component_matrix):
         return self._apply_HAF(component_matrix)
 
-    def transpose(self):
+    def transpose(self, multiband_image):
+        return self._apply_FAH(multiband_image)
 
-
-    def lipschitz_constant(self):
-        Lip = self._power_method()
-        return Lip
+    def lipschitz(self):
+        if not hasattr(self, '_Lip')
+            self._Lip = self._power_method()
+        return self._Lip
 
     def _power_method(self):
         X_l = LightComponent(self.num_pix, random_init=True)
         X_s = LightComponent(self.num_pix_src, random_init=True)
         X = ComponentMatrix([X_l.data, X_s.data])
         for _ in range(n_iter):
-           x = x / np.linalg.norm(x, 2)
-           x = A_T(A(x))
-        return np.linalg.norm(x, 2)
+           X = 1. / X.norm(p=2) * X
+           X = self.transpose(self.operator(X))
+        return X.norm(p=2)

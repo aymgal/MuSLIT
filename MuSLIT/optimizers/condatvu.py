@@ -37,12 +37,12 @@ class CondatVuOptimizer(object):
             thresh = self.thresh_schedule(i)
 
             eval1 = X - self.tau * (self.W(U) + self.B(X))
-            X_new = self.prox1(eval1, self.tau * thresh)
+            X_new = self.prox1(eval1, self.tau, thresh)
 
             Y_new = 2 * X_new - X
 
             eval2 = U + self.eta * self.W(Y_new)
-            U_new = self.prox2(eval2, self.eta * thresh)
+            U_new = self.prox2(eval2, self.eta, thresh)
 
             X = X_new
             U = U_new

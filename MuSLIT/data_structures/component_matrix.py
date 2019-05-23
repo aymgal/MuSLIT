@@ -1,7 +1,6 @@
 __author__ = 'aymgal'
 
 
-import copy
 import numpy as np
 
 
@@ -30,16 +29,7 @@ class ComponentMatrix(object):
             lens_light_data = other * self.lens_data
             source_light_data = other * self.source_data
         else:
-            raise RuntimeError("Unsupported operation")
-        return ComponentMatrix([lens_light_data, source_light_data])
-
-    def __rdiv__(self, other):
-        """reflected division, when 'other' is a number"""
-        if isinstance(other, (int, float, long)):
-            lens_light_data = other / self.lens_data
-            source_light_data = other / self.source_data
-        else:
-            raise RuntimeError("Unsupported operation")
+            raise NotImplementedError("Unsupported operation")
         return ComponentMatrix([lens_light_data, source_light_data])
 
     def _update_sizes(self):
@@ -74,3 +64,10 @@ class ComponentMatrix(object):
     @property
     def XF(self):
         return self.data
+
+
+    def norm(self, p=2):
+        """Average of the norm among components"""
+        norm_lens   = np.linalg.norm(self.lens_data, p)
+        norm_source = np.linalg.norm(self.source_data, p)
+        return (norm_lens + norm_source) / 2.
