@@ -36,7 +36,7 @@ _num_components = 2
 _mode = 'synthesis'
 
 
-class LightModeller(object):
+class LightModellerNMF(object):
 
     """TODO : check matrix shapes all over the place"""
 
@@ -46,7 +46,7 @@ class LightModeller(object):
         self.num_components = _num_components
 
         self.num_bands, num_pix1, num_pix2 = target_image.shape
-        assert num_pix1 == num_pix2, "Inout image must be square"
+        assert num_pix1 == num_pix2, "Input image must be square"
 
         self.num_pix = num_pix1
         self.num_pix_src = int(self.num_pix * source_to_image_ratio)
