@@ -31,6 +31,14 @@ class MixingMatrix(object):
                 raise ValueError("Input image required for PCA initialization")
             self.data = perform_PCA(input_image)
 
+    @property
+    def num_bands(self):
+        return self.Nb
+
+    @property
+    def num_components(self):
+        return self.Nc
+
     def A(self):
         return self.apply_as_operator
 
@@ -41,10 +49,10 @@ class MixingMatrix(object):
         return self._apply(component_matrix)
 
     def apply_as_transpose_operator(self, component_matrix):
-        return self._apply_transpose(component_matrix)
+        return self._apply_t(component_matrix)
 
     def _apply(self, cmo):
         return self.data * cmo.data
 
-    def _apply_transpose(self, cmo):
+    def _apply_t(self, cmo):
         return cmo.data * self.data.T

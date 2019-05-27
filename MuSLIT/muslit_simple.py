@@ -4,46 +4,38 @@ import numpy as np
 from scipy import signal as scp
 import functools
 
-import MuSLIT.operators.all as all_ops
 import MuSLIT.utils.image as image_utils
 import MuSLIT.utils.math as math_utils
+import MuSLIT.operators.proximals as proxs
 from MuSLIT.optimizers.condatvu import CondatVuOptimizer
-from MuSLIT.transforms.starlet import StarletTransform
+from MuSLIT.optimizers.threshold_scheduler import ThresholdScheduler
 from MuSLIT.transforms.data_structures import ComponentMatrix
 
-
-_mode = 'analysis'
 
 
 class LightModellerSimple(object):
 
     """TODO : check matrix shapes all over the place"""
 
-    def __init__(self, target_image, forward_model, starlet_level=0, 
-                 source_to_image_ratio=1, threshold=1):
+    def __init__(self, target_image, forward_model, dictionnary_set, 
+                 threshold_mode='linear', optimizer_mode='condatvu',
+                 source_to_image_ratio=1):
+        # number of components to deblend
+        self.num_components = mixing_matrix.num_components
 
-        self.mode = _mode
-        self.target_image  = target_image
-        self.forward_model = forward_model
+        # number of spectral bands
+        self.num_bands = target_image.num_bands
 
-        _, self.num_components = mixing_matrix.shape
-        self.A = mixing_matrix
-
-        self.num_bands, num_pix1, num_pix2 = target_image.shape
-        if num_pix1 != num_pix2:
-            raise ValueError("Input image must be square")
-
-        self.num_pix = num_pix1
+        # number of side pixels in lens and source plan e
+        self.num_pix = target_image.num_pix
         self.num_pix_src = int(self.num_pix * source_to_image_ratio)
-        n2  = self.num_pix**2
-        ns2 = self.num_pix_src**2
 
-        self.starlet = StarletTransform(lvl=starlet_level)
+        self._target_image    = target_image
+        self._forward_model   = forward_model
+        self._dictionnary_set = dictionnary_set
 
-        # TODO update threshold schedule
-        self.thresh_schedule: lambda i: return 5. * np.exp(-i)
-
-        self._init_optimizer()
+        self._init_threshold(threshold_mode)
+        self._init_optimizer(optimizer_mode)
 
 
     def run(self, n_iter=100):
@@ -51,26 +43,60 @@ class LightModellerSimple(object):
         self.optimizer(self.X0, self.U0, n_iter=n_iter)
 
 
-    def _init_optimizer(self):
-        self.forward_op   = self.forward_model.operator
-        self.forward_op_t = self.forward_model.transpose
-        self.transform_op   = self.starlet.analysis
-        self.transform_op_t = self.starlet.synthesis  # APPOXIMATION !!!
+    def _prox_soft_thresh(self, component_matrix, step, tresh=0):
+        cm = component_matrix
+        cm.lens_data = proxs.prox_soft_thresh(cm.lens_data, s, thresh=thresh)
+        cm.source_data = proxs.prox_soft_thresh(cm.source_data, s, thresh=thresh)
+        return cm
 
-        Lip = self.forward_model.lipschitz
+    def _prox_soft_thresh_dual(self, component_matrix, step, tresh=0):
+        cm = component_matrix
+        cm_copy = copy.deepcopy(cm)
+        cm_primal = self.prox_soft_thresh(cm_copy, step, thresh=thresh)
+        cm = cm - cm_primal
+        return cm
+
+    def _prox_plus(self, component_matrix, step, tresh=0):
+        cm = component_matrix
+        cm.lens_data = proxs.prox_plus(cm.lens_data, s)
+        cm.source_data = proxs.prox_plus(cm.source_data, s)
+        return cm
+
+    def _init_threshold(self, threshold_mode):
+        # TODO estimate from noise levels in 'target_image'
+        init_value = 100
+        mb_noise = self._target_image.noise_MAD
+        final_value = 3 * np.min(mb_noise)  # TODO : one level per band and per component
+        self._thresh_scheduler = ThresholdScheduler(init_value=init_value,
+                                                    final_value=final_value,
+                                                    mode=threshold_mode)
+
+    def _init_optimizer(self, optimizer_mode):
+        #TODO different optimizers ? (optimizer_mode)
+
+        forward_op   = self._forward_model.operator
+        forward_op_t = self._forward_model.transpose
+        transform_op   = self._dictionnary_set.analysis
+        transform_op_t = self._dictionnary_set.synthesis
+
+        prox_g1 = self._prox_plus
+        prox_g2_dual = self._prox_soft_thresh_dual
+
+        Lip = self._forward_model.lipschitz
         tau = 1. / Lip
         eta = 0.5 * Lip
+        print("INFO :\nLip={}\ntau={}\neta={}".format(Lip, tau, eta))
 
-        prox1 = lambda X, s, t: all_ops.prox_soft_thresh(X, s, thresh=t)
-        prox2 = lambda X, s, t: all_ops.prox_plus(X, s)
-    
-        self.optimizer = CondatVuOptimizer(self.target_image, 
-                                           self.forward_op, self.forward_op_t, 
-                                           self.transform_op, self.transform_op_t,
-                                           self.thresh_schedule,
-                                           prox1, prox2, n_iter, tau, nu)
+        self.optimizer = CondatVuOptimizer(self._target_image.data, 
+                                           forward_op, forward_op_t, 
+                                           transform_op, transform_op_t,
+                                           self._thresh_scheduler,
+                                           prox_g1, prox_g2_dual, 
+                                           tau, nu)
 
     def _random_init(self):
+        # TODO use num_components for flexibility
+
         U0_l = LightComponent(self.num_pix, random_init=True)
         U0_s = LightComponent(self.num_pix_src, random_init=True)
         self.U0 = ComponentMatrix([U0_l.data, U0_s.data])
@@ -78,8 +104,3 @@ class LightModellerSimple(object):
         X0_l = LightComponent(self.num_pix, random_init=True)
         X0_s = LightComponent(self.num_pix_src, random_init=True)
         self.X0 = ComponentMatrix([X0_l.data, X0_s.data])
-
-
-
-
-

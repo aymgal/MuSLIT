@@ -4,7 +4,7 @@ __author__ = 'aymgal'
 import numpy as np
 import scipy.signal as scp
 
-import MuSLIT.utils.image as image_utils
+import MuSLIT.utils.coordinates as coord_utils
 
 
 def kappa_to_alpha(kappa, num_pix):
@@ -14,7 +14,7 @@ def kappa_to_alpha(kappa, num_pix):
     num_pix_kappa = kappa.shape[0]
 
     #Coordonnees de la grille de l'espace image
-    x, y = image_utils.square_grid(num_pix_kappa, dtype=float)
+    x, y = coord_utils.square_grid(num_pix_kappa, dtype=float)
     x = x.reshape((num_pix_kappa, num_pix_kappa))
     y = y.reshape((num_pix_kappa, num_pix_kappa))
 
@@ -60,12 +60,12 @@ def build_lensing_operator(kappa, num_pix, source_to_image_ratio,
     alpha_x = alpha_x + x_shear
     alpha_y = alpha_y + y_shear
 
-    xa, ya = image_utils.square_grid(num_pix, dtype=int)
+    xa, ya = coord_utils.square_grid(num_pix, dtype=int)
     xa = xa.reshape((num_pix, num_pix))
     ya = ya.reshape((num_pix, num_pix))
 
     num_pix_src = int(num_pix * source_to_image_ratio)
-    xb, yb = image_utils.square_grid(num_pix_src, dtype=int)
+    xb, yb = coord_utils.square_grid(num_pix_src, dtype=int)
 
     #Scaling of the source grid
 
@@ -106,7 +106,7 @@ def source_to_image(source, lensing_operator, num_pix, ones=True):
     image = np.zeros((num_pix, num_pix))
 
     num_pix_src = source.shape[0]
-    xb, yb = image_utils.square_grid(num_pix_src, dtype=int)
+    xb, yb = coord_utils.square_grid(num_pix_src, dtype=int)
 
     k = 0
     for pos in lensing_operator:
@@ -119,7 +119,7 @@ def source_to_image(source, lensing_operator, num_pix, ones=True):
 
 def image_to_source(image, lensing_operator, num_pix_src, square=False, lensed=True):
     source = np.zeros((num_pix_src, num_pix_src))
-    xb, yb = image_utils.square_grid(num_pix_src, dtype=int)
+    xb, yb = coord_utils.square_grid(num_pix_src, dtype=int)
 
     for k in range(num_pix_src**2):
         pos = lensing_operator[k]

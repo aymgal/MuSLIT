@@ -20,8 +20,5 @@ def prox_column_norm_plus(X, step):
 def prox_hard_thresh(X, step, thresh=0):
     return operators.prox_hard(X, step, thresh=thresh)
 
-def prox_soft(X, step, thresh=0):
+def prox_soft_thresh(X, step, thresh=0):
     return operators.prox_soft(X, step, thresh=thresh)
-
-def psf_conjugate(psf):
-    return 

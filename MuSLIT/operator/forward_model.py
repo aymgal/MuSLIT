@@ -2,7 +2,7 @@ __author__ = 'aymgal'
 
 
 import numpy as np
-
+import pysap
 
 
 class ForwardModel(object):
@@ -17,26 +17,26 @@ class ForwardModel(object):
         self.A   = mixing_matrix.A
         self.A_t = mixing_matrix.A_t
         self.F   = lensing_martrix.F
-        self.F_t = lensing_martrix.F_t
-
-    def _apply_HAF(self, X):
-        """here X must be a ComponentMatrix object"""
-        return self.H(self.A(self(F(X))))
-
-    def _apply_FAH(self, X):
-        """here X must be a numpy array of shape (num_bands, num_pix**2)"""
-        return self.F_t(self.A_t(self(H_t(X))))
+        self.F_inv = lensing_martrix.F_inv
 
     def operator(self, component_matrix):
+        """'component_matrix' must be a ComponentMatrix object"""
         return self._apply_HAF(component_matrix)
 
     def transpose(self, multiband_image):
+        """'multiband_image' must be a numpy.ndarray of shape (num_bands, num_pix**2)"""
         return self._apply_FAH(multiband_image)
 
     def lipschitz(self):
         if not hasattr(self, '_Lip')
             self._Lip = self._power_method()
         return self._Lip
+
+    def _apply_HAF(self, X):
+        return self.H(self.A(self(F(X))))
+
+    def _apply_FAH(self, X):
+        return self.F_inv(self.A_t(self(H_t(X))))
 
     def _power_method(self):
         X_l = LightComponent(self.num_pix, random_init=True)

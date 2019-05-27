@@ -11,13 +11,13 @@ class LightComponent(object):
     Typically either the lens galaxy G or the source galaxy S.
     """
 
-    def __init__(self, num_pix, random_init=True, init_data=None):
+    def __init__(self, num_pix, init_data=None, random_init=True):
         self.Np = num_pix
         self._update_shapes()
-        if random_init:
-            self._data = np.random.rand(self.data_shape)
-        elif init_data is not None:
+        if init_data is not None:
             self._data = init_data
+        elif random_init:
+            self._data = np.random.rand(self.data_shape)
         else:
             self._data = np.zeros(self.data_shape)
 
@@ -28,8 +28,9 @@ class LightComponent(object):
     @data.setter
     def data(self, new_data):
         self._data = new_data
-        if new_data.shape != self.data_shape:
-            Np = np.sqrt(new_shape)
+        new_shape = new_data.shape
+        if new_shape != self.data_shape:
+            Np = np.sqrt(new_shape[0])
             if not Np.is_integer():
                 raise RuntimeError("Inconsistent new data size")
             self.Np = int(Np)
